@@ -100,6 +100,10 @@ public class TodoBackend extends AbstractVerticle {
             }
         });
 
+        vertx.eventBus().consumer("app.to.server").handler(message -> {
+            vertx.eventBus().publish("app.to.client", "");
+        });
+
         logger.info(this.getClass().getName() + " is deployed successfully");
     }
 }

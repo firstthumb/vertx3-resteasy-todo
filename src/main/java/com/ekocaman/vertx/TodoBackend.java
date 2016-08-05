@@ -14,6 +14,9 @@ import java.util.UUID;
 public class TodoBackend extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(TodoBackend.class);
 
+    public static final String GLOBAL_EVENT_BUS_SERVER = "app.to.server";
+    public static final String GLOBAL_EVENT_BUS_CLIENT = "app.to.client";
+
     public static final String CONSUMER_ID = "backend";
     public static final String CONSUMER_OPERATION = "operation";
 
@@ -50,7 +53,7 @@ public class TodoBackend extends AbstractVerticle {
         vertx.eventBus().<JsonObject>consumer(CONSUMER_ID, msg -> {
             JsonObject json = msg.body();
 
-            logger.info("Running backend job : {}", json);
+            logger.info("Running backend job : " + json);
             switch (json.getString(CONSUMER_OPERATION, "")) {
                 case OPERATION_GET: {
                     String taskId = json.getString(PARAM_TASK_ID);
@@ -67,17 +70,21 @@ public class TodoBackend extends AbstractVerticle {
                     }
                     TASKS.put(task.getId(), task);
                     msg.reply(new JsonObject(Json.encode(new TaskList(TASKS.values()))));
+                    notifyForChanges();
                     break;
                 }
 
                 case OPERATION_UPDATE: {
+                    String taskId = json.getString(PARAM_TASK_ID);
                     String jsonString = json.getString(PARAM_TASK_OBJECT);
                     Task task = Json.decodeValue(jsonString, Task.class);
-                    if (task.getId() == null || task.getId().isEmpty()) {
+                    if (taskId == null || taskId.isEmpty()) {
                         msg.fail(0, "Task does not exist");
                     } else {
-                        TASKS.put(task.getId(), task);
+                        task.setId(taskId);
+                        TASKS.put(taskId, task);
                         msg.reply(new JsonObject(Json.encode(new TaskList(TASKS.values()))));
+                        notifyForChanges();
                     }
                     break;
                 }
@@ -86,6 +93,7 @@ public class TodoBackend extends AbstractVerticle {
                     String taskId = json.getString(PARAM_TASK_ID);
                     TASKS.remove(taskId);
                     msg.reply(new JsonObject(Json.encode(new TaskList(TASKS.values()))));
+                    notifyForChanges();
                     break;
                 }
 
@@ -100,10 +108,15 @@ public class TodoBackend extends AbstractVerticle {
             }
         });
 
-        vertx.eventBus().consumer("app.to.server").handler(message -> {
-            vertx.eventBus().publish("app.to.client", "");
+        // If client sends message, return tasks list
+        vertx.eventBus().consumer(GLOBAL_EVENT_BUS_SERVER).handler(message -> {
+            vertx.eventBus().publish(GLOBAL_EVENT_BUS_CLIENT, new JsonObject(Json.encode(new TaskList(TASKS.values()))));
         });
 
         logger.info(this.getClass().getName() + " is deployed successfully");
+    }
+
+    private void notifyForChanges() {
+        vertx.eventBus().publish(GLOBAL_EVENT_BUS_CLIENT, new JsonObject(Json.encode(new TaskList(TASKS.values()))));
     }
 }

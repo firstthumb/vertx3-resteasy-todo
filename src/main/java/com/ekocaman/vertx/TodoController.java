@@ -19,7 +19,8 @@ public class TodoController {
 
     @GET
     @Path("/")
-    @Produces("application/json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public void get(@Suspended final AsyncResponse asyncResponse, @Context Vertx vertx) {
         vertx.eventBus().<JsonObject>send(TodoBackend.CONSUMER_ID, new JsonObject().put(TodoBackend.CONSUMER_OPERATION, TodoBackend.OPERATION_LIST), msg -> {
             if (msg.succeeded()) {
@@ -38,7 +39,8 @@ public class TodoController {
 
     @GET
     @Path("/{taskId}")
-    @Produces("application/json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public void get(@Suspended final AsyncResponse asyncResponse, @Context Vertx vertx, @PathParam("taskId") String taskId) {
         vertx.eventBus().<JsonObject>send(TodoBackend.CONSUMER_ID,
                 new JsonObject()
@@ -84,14 +86,39 @@ public class TodoController {
     }
 
     @PUT
-    @Path("/")
+    @Path("/{taskId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void update(@Suspended final AsyncResponse asyncResponse, @Context Vertx vertx, Task task) {
+    public void update(@Suspended final AsyncResponse asyncResponse, @Context Vertx vertx, @PathParam("taskId") String taskId, Task task) {
         vertx.eventBus().<JsonObject>send(TodoBackend.CONSUMER_ID,
                 new JsonObject()
                         .put(TodoBackend.CONSUMER_OPERATION, TodoBackend.OPERATION_UPDATE)
-                        .put(TodoBackend.PARAM_TASK_OBJECT, Json.encode(task)),
+                        .put(TodoBackend.PARAM_TASK_OBJECT, Json.encode(task))
+                        .put(TodoBackend.PARAM_TASK_ID, taskId),
+                msg -> {
+                    if (msg.succeeded()) {
+                        JsonObject json = msg.result().body();
+                        if (json != null) {
+                            logger.info("RESPONSE : " + json.encode());
+                            asyncResponse.resume(json.encode());
+                        } else {
+                            asyncResponse.resume(Response.status(Response.Status.NOT_FOUND).build());
+                        }
+                    } else {
+                        asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+                    }
+                });
+    }
+
+    @DELETE
+    @Path("/{taskId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void delete(@Suspended final AsyncResponse asyncResponse, @Context Vertx vertx, @PathParam("taskId") String taskId) {
+        vertx.eventBus().<JsonObject>send(TodoBackend.CONSUMER_ID,
+                new JsonObject()
+                        .put(TodoBackend.CONSUMER_OPERATION, TodoBackend.OPERATION_DELETE)
+                        .put(TodoBackend.PARAM_TASK_ID, taskId),
                 msg -> {
                     if (msg.succeeded()) {
                         JsonObject json = msg.result().body();

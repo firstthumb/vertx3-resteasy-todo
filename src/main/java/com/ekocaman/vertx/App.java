@@ -15,7 +15,7 @@ public class App {
                     vertx.deployVerticle(TodoBackend.class.getName());
                 },
                 error -> {
-                    logger.error("Could not deploy verticle, reason : {}", error);
+                    logger.error("Could not deploy verticle, reason : " + error);
                 }
         );
     }

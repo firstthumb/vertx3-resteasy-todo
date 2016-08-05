@@ -22,8 +22,8 @@ public class RestVerticle extends AbstractVerticle {
         deployment.getRegistry().addPerInstanceResource(TodoController.class);
 
         BridgeOptions opts = new BridgeOptions()
-                .addInboundPermitted(new PermittedOptions().setAddress("app.to.server"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("app.to.client"));
+                .addInboundPermitted(new PermittedOptions().setAddress(TodoBackend.GLOBAL_EVENT_BUS_SERVER))
+                .addOutboundPermitted(new PermittedOptions().setAddress(TodoBackend.GLOBAL_EVENT_BUS_CLIENT));
 
         final VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);
 

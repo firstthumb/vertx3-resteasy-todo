@@ -1,12 +1,17 @@
-<h2>Edit task</h2>
+<h2>Edit Task</h2>
 <div class="row">
-    <div class="col-md-6">
-        <form novalidate name="EditForm" id="edit-form" method="post" action="">
+    <div class="col-md-10">
+        <form class="form-inline" novalidate name="EditForm" id="edit-form" method="post" action="">
             <input type="hidden" ng-model="task.id" value="{{task.id}}" />
+
             <div class="form-group">
                 <label>Message:</label>
                 <input class="form-control" type="text" ng-model="task.message" value="{{task.message}}" required />
             </div>
+            <div class="checkbox">
+                <label><input class="form-control" type="checkbox" ng-model="task.completed"/> Completed</label>
+            </div>
+
             <button class="btn btn-primary" ng-disabled="AddNewForm.$invalid" id="add-new-btn" ng-click="update(task)">Update <span class="glyphicon glyphicon-floppy-disk"></span></button>
             <button class="btn btn-danger" ng-click="delete(task)">Delete <span class="glyphicon glyphicon-trash"></span></button>
             <a href="#/" class="btn">Cancel</a>

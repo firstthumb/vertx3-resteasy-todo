@@ -1,4 +1,4 @@
-angular.module('TodoApp', []).config(['$routeProvider', function ($routeProvider) {
+angular.module('TodoApp', ['ngRoute']).config(['$routeProvider', function ($routeProvider) {
     $routeProvider.
     when('/', {templateUrl: '/tpl/lists.html', controller: ListCtrl}).
     when('/add-task', {templateUrl: '/tpl/add-new.html', controller: AddCtrl}).
@@ -10,6 +10,16 @@ function ListCtrl($scope, $http) {
     $http.get('/api/tasks').success(function (data) {
         $scope.tasks = data.tasks;
     });
+
+    var eb = new EventBus("/eventbus/");
+    eb.onopen = function () {
+        eb.registerHandler("app.to.client", function (err, msg) {
+            $scope.tasks = msg.body.tasks;
+            $scope.$apply();
+            console.log("Tasks are updated, refreshing... ");
+            console.log("Tasks : " + JSON.stringify($scope.tasks))
+        });
+    };
 }
 
 function AddCtrl($scope, $http, $location) {

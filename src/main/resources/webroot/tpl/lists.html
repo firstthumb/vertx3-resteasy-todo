@@ -3,11 +3,15 @@
     <thead>
         <tr>
             <th>Message</th>
+            <th>Completed</th>
+            <th>Date</th>
         </tr>
     </thead>
     <tbody>
     <tr ng-repeat="task in tasks">
         <td>{{task.message}}</td>
+        <td>{{task.completed}}</td>
+        <td>{{task.created | date:'medium'}}</td>
         <td><a href="#/edit/{{task.id}}" class="btn btn-default btn-sm"><i class="glyphicon glyphicon-pencil"></i></a></td>
     </tr>
     </tbody>
